@@ -1,8 +1,6 @@
 # Finn-Hub-Stock-Analysis
 Conducted comprehensive stock analysis by extracting and analyzing data from Finn Hub API. Employed Python and Databricks for data cleaning, statistical analysis, and generating insightful visualizations. Provided valuable insights into stock performance for informed decision-making.
 
-Sure! Here are step-by-step instructions for beginners to run the above project:
-
 Requirements:
 1. Python installed on your system.
 2. Jupyter Notebook or any Python IDE (Integrated Development Environment) installed.
