@@ -37,7 +37,24 @@ Instructions:
    ```
 
 7. Run the code to fetch the stock data, process and transform it, and store it in a Pandas DataFrame.
-
+   ```python
+   stock_data = []
+   for symbol in symbols:
+       data = finnhub_client.stock_candles(symbol, 'D', int(pd.Timestamp(start_date).timestamp()), int(pd.Timestamp(end_date).timestamp()))
+       df = pd.DataFrame(data)
+        
+       df['symbol'] = symbol
+       df['date'] = pd.to_datetime(df['t'], unit='s').dt.date
+       df['opening_price'] = df['o'].astype(float)
+       df['highest_price'] = df['h'].astype(float)
+       df['lowest_price'] = df['l'].astype(float)
+       df['closing_price'] = df['c'].astype(float)
+       df['status'] = df['s'].astype(str)
+       df['volume'] = df['v'].astype(float)
+       df = df[['symbol', 'date', 'opening_price', 'highest_price', 'lowest_price', 'closing_price', 'status', 'volume']]
+       stock_data.append(df)
+   all_stocks_data = pd.concat(stock_data)
+   ```
 8. Perform data cleaning and validation steps:
    - Drop any rows with missing values:
      ```python
@@ -68,12 +85,30 @@ Instructions:
 10. Visualize the data:
     - Plot the risk vs. return by calculating average daily returns and standard deviation of daily returns:
       ```python
+      # Calculate daily returns
+      all_stocks_data['daily_return'] = all_stocks_data.groupby('symbol')['closing_price'].pct_change()
+
+      # Calculate the daily average percentage change in closing price for each stock
+      avg_daily_returns = all_stocks_data.groupby('symbol')['daily_return'].mean()
+
+      # Calculate the standard deviation of the daily percentage change in closing price for each stock
+      std_daily_returns = all_stocks_data.groupby('symbol')['daily_return'].std()
+
+      # Merge the average and standard deviation of returns into a single DataFrame
+      risk_data = pd.concat([avg_daily_returns, std_daily_returns], axis=1)
+      risk_data.columns = ['avg_daily_return', 'std_daily_return']
+
       plt.figure(figsize=(12, 8))
       plt.scatter(avg_daily_returns, std_daily_returns, s=1000, alpha=0.5)
       plt.xlabel('Average Daily Return')
       plt.ylabel('Standard Deviation of Daily Returns')
       plt.title('Risk vs. Return')
       plt.grid(True)
+      
+      # Label each point with the corresponding stock symbol
+      for i, symbol in enumerate(symbols):
+         plt.annotate(symbol, (avg_daily_returns[i], std_daily_returns[i]), xytext=(10,-10), textcoords='offset points', ha='center', va='center')
+      plt.show()
       ```
 
     - Plot the total trading volume for each stock:
@@ -87,22 +122,7 @@ Instructions:
       plt.grid(True)
       ```
 
-11. Analyze the correlation between stock prices:
-    ```python
-    correlation = all_stocks_data[['AAPL', 'GOOG', 'MSFT', 'AMZN', 'FB']].corr()
-    plt.figure(figsize=(10, 8))
-    sns.heatmap(correlation, annot=True, cmap='coolwarm')
-    plt.title('Correlation Between Stock Prices')
-    plt.show()
-    ```
-
-12. Save the correlation matrix to an image file:
-    ```python
-    correlation_plot = sns.heatmap(correlation, annot=True, cmap='coolwarm')
-    correlation_plot.figure.savefig('correlation_matrix.png')
-    ```
-
-13. Run the code and observe the generated visualizations and saved files.
+11. Run the code from Jupyter notebook and observe the generated visualizations.
 
 Remember to replace 'YOUR_API_KEY' with your actual Finnhub API key in step 5. You can also modify the stock symbols and time period in step 6 to analyze different stocks and time ranges.
 
